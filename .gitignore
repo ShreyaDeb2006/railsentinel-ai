@@ -1,6 +1,6 @@
-__pycache__/
-*.pyc
-*.db
 venv/
-node_modules/
-.env
+__pycache__/
+*.pt
+alerts/
+*.pyc
+test_camera.jpg
