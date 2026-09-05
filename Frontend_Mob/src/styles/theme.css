@@ -1,0 +1,132 @@
+/* ---------------------------------------------------------------------
+   RailSentinel AI — design tokens
+   Control-room aesthetic: dark base, monospace for telemetry data,
+   threat-level color doing the actual signaling (not decoration).
+   --------------------------------------------------------------------- */
+
+:root {
+  /* base — deep cyan canvas, vivid cyan panels */
+  --bg: #062a2e;
+  --panel: #1fe3e3;
+  --panel-raised: #6ff3f3;
+  --border: #0e7c86;
+  --border-soft: #14969f;
+
+  /* text — light values are the default, for copy sitting directly on
+     the deep-cyan canvas (near-white for max contrast). Panels/cards
+     re-declare these locally (see dashboard.css / rpf.css) to near-black
+     teal, since they sit on the vivid cyan panel color and need the
+     contrast flipped the other way. */
+  --text: #ffffff;
+  --text-muted: #8fe9e9;
+  --text-faint: #4fb8bf;
+
+  /* brand accent — deep cyan, used sparingly for interactive/selected states */
+  --accent: #00c2c2;
+  --accent-dim: #044f52;
+
+  /* threat levels — these carry meaning, never decorative */
+  --low: #2fbf6f;
+  --low-bg: rgba(47, 191, 111, 0.12);
+  --uncertain: #f5a623;
+  --uncertain-bg: rgba(245, 166, 35, 0.14);
+  --high: #f0453f;
+  --high-bg: rgba(240, 69, 63, 0.15);
+
+  /* type */
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.threat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.threat-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.threat-pill.low {
+  color: var(--low);
+  background: var(--low-bg);
+}
+.threat-pill.low::before {
+  background: var(--low);
+}
+
+.threat-pill.uncertain {
+  color: var(--uncertain);
+  background: var(--uncertain-bg);
+}
+.threat-pill.uncertain::before {
+  background: var(--uncertain);
+}
+
+.threat-pill.high {
+  color: var(--high);
+  background: var(--high-bg);
+}
+.threat-pill.high::before {
+  background: var(--high);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

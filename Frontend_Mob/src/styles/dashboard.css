@@ -1,0 +1,274 @@
+.dashboard {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-header {
+  height: 60px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  /* flip text tokens to near-black teal for this vivid cyan panel;
+     cascades to brand name, count chips, connection indicator, etc. */
+  --text: #012226;
+  --text-muted: #0b4a50;
+  --text-faint: #1f6870;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: rotate(45deg);
+}
+
+.brand-name {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: var(--text-faint);
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
+}
+
+.header-counts {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.count-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.count-chip.high {
+  color: var(--high);
+  border-color: rgba(240, 69, 63, 0.35);
+}
+.count-chip.uncertain {
+  color: var(--uncertain);
+  border-color: rgba(245, 166, 35, 0.35);
+}
+.count-chip.low {
+  color: var(--low);
+  border-color: rgba(47, 191, 111, 0.35);
+}
+
+.connection-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.connection-indicator .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+.connection-indicator.live .dot {
+  background: var(--low);
+  box-shadow: 0 0 0 3px var(--low-bg);
+}
+.connection-indicator.offline .dot {
+  background: var(--uncertain);
+}
+
+.dashboard-error {
+  background: var(--high-bg);
+  color: var(--high);
+  font-size: 13px;
+  padding: 8px 20px;
+}
+
+.dashboard-loading {
+  position: fixed;
+  bottom: 16px;
+  left: 20px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.dashboard-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.map-pane {
+  flex: 1.6;
+  min-width: 0;
+  border-right: 1px solid var(--border);
+}
+
+.side-pane {
+  flex: 1;
+  min-width: 340px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* --- Alert list --- */
+
+.alert-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.alert-list-filters {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px 10px;
+  flex-shrink: 0;
+}
+
+.filter-chip {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.filter-chip.active {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--accent-dim);
+}
+
+.alert-list-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alert-list-empty,
+.device-empty {
+  color: var(--text-faint);
+  font-size: 13px;
+  padding: 20px 4px;
+  text-align: center;
+}
+
+.alert-card {
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  --text: #012226;
+  --text-muted: #0b4a50;
+  --text-faint: #1f6870;
+}
+.alert-card:hover {
+  border-color: var(--border);
+}
+.alert-card.selected {
+  border-color: var(--accent);
+  background: var(--panel-raised);
+}
+
+.alert-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.alert-card-time {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.alert-card-type {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.alert-card-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.status-tag {
+  align-self: flex-start;
+  font-size: 10px;
+  color: var(--text-faint);
+  text-transform: none;
+}
+
+/* --- Device status --- */
+
+.device-status {
+  flex-shrink: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 14px 16px;
+}
+
+.panel-heading {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.device-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 12px;
+}
+
+.device-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.device-dot.online {
+  background: var(--low);
+}
+.device-dot.offline {
+  background: var(--text-faint);
+}
+
+.device-id {
+  flex: 1;
+  color: var(--text);
+}
+
+.device-time {
+  color: var(--text-faint);
+}
