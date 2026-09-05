@@ -4,3 +4,4 @@ __pycache__/
 alerts/
 *.pyc
 test_camera.jpg
+node_modules/
