@@ -10,25 +10,39 @@ class Detector:
     def __init__(
         self,
         model_path=config.MODEL_PATH,
-        thresholds=config.CONFIDENCE_THRESHOLDS,
-        imgsz=config.INFERENCE_SIZE,
+        confidence=config.CONFIDENCE_THRESHOLD,
+        img_size=config.MODEL_IMG_SIZE,
+        device=config.DEVICE,
     ):
         self.model = YOLO(model_path)
-        self.thresholds = thresholds
-        self.imgsz = imgsz
+        self.confidence = confidence
+        self.img_size = img_size
+        self.device = device
 
-        self.wanted_classes = set(thresholds.keys())
+        self.wanted_classes = {
+            "person",
+            "backpack",
+            "handbag",
+            "suitcase"
+        }
 
-        # Use the lowest threshold for YOLO's initial filter
-        # so bag detections are not removed too early.
-        self._yolo_conf = min(thresholds.values())
+        # Bags are much easier to confuse with a person than a person
+        # is to confuse with a bag (a slouched/partial person looks a
+        # bit like a blob, same as a bag). Asking for a slightly
+        # higher confidence specifically on "person" cuts down on
+        # bags getting mislabeled as low-confidence people, without
+        # making the model miss real bags.
+        self.per_class_confidence = {
+            "person": max(confidence, 0.55),
+        }
 
     def detect(self, frame):
         results = self.model(
             frame,
             verbose=False,
-            imgsz=self.imgsz,
-            conf=self._yolo_conf,
+            conf=self.confidence,
+            imgsz=self.img_size,
+            device=self.device,
         )[0]
 
         detections = []
@@ -44,9 +58,11 @@ class Detector:
 
             conf = float(box.conf[0])
 
-            # Apply the correct confidence threshold
-            # for this specific object class.
-            if conf < self.thresholds[cls_name]:
+            min_conf = self.per_class_confidence.get(
+                cls_name, self.confidence
+            )
+
+            if conf < min_conf:
                 continue
 
             x1, y1, x2, y2 = map(

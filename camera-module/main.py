@@ -48,12 +48,19 @@ def draw_object(frame, det):
         det["threat_level"]
     ]
 
+    # "predicted" = this frame's YOLO pass missed/low-confidence'd
+    # the bag, so we're drawing its last known position from the
+    # tracker's grace period instead of a fresh detection. Thinner
+    # line makes that visible instead of pretending it's a fresh hit,
+    # while still keeping the box on screen so it doesn't flicker.
+    thickness = 1 if det.get("predicted") else 2
+
     cv2.rectangle(
         frame,
         (x1, y1),
         (x2, y2),
         color,
-        2
+        thickness
     )
 
     label = (
@@ -71,7 +78,6 @@ def draw_object(frame, det):
         color,
         2
     )
-
 
 def resize_to_screen(
     frame,
