@@ -74,36 +74,38 @@ def _make_alert(db, camera=None, handheld=None):
 def try_fuse(db: Session):
     """
     Called right after a new camera detection or handheld reading is
-    saved. Looks ONLY for an immediate pair (a camera detection and a
-    handheld reading, both still unmatched, close in time and location).
+    saved. Looks for a pair (a camera detection and a handheld reading,
+    both still unmatched, close in time and location) among ALL pending
+    unmatched readings in the time window — not just the most recent of
+    each — so an earlier valid match isn't skipped just because a newer,
+    unrelated reading of the other type came in afterward.
 
-    If no pair exists yet, this does nothing and returns None — the lone
-    reading is left unmatched so it still has a chance to be paired when
-    the other sensor's data arrives moments later. Use sweep_stale() to
-    eventually turn old unmatched leftovers into solo alerts.
+    If no pair exists yet, this does nothing and returns None — lone
+    readings are left unmatched so they still have a chance to be paired
+    when the other sensor's data arrives moments later. Use sweep_stale()
+    to eventually turn old unmatched leftovers into solo alerts.
     """
     cutoff = datetime.utcnow() - timedelta(seconds=TIME_WINDOW_SECONDS)
 
-    unmatched_camera = (
+    unmatched_cameras = (
         db.query(models.CameraDetection)
         .filter(models.CameraDetection.matched == False)  # noqa: E712
         .filter(models.CameraDetection.timestamp >= cutoff)
         .order_by(models.CameraDetection.timestamp.desc())
-        .first()
+        .all()
     )
-    unmatched_handheld = (
+    unmatched_handhelds = (
         db.query(models.HandheldReading)
         .filter(models.HandheldReading.matched == False)  # noqa: E712
         .filter(models.HandheldReading.timestamp >= cutoff)
         .order_by(models.HandheldReading.timestamp.desc())
-        .first()
+        .all()
     )
 
-    if unmatched_camera and unmatched_handheld and _close_enough(
-        unmatched_camera.lat, unmatched_camera.lng,
-        unmatched_handheld.lat, unmatched_handheld.lng
-    ):
-        return _make_alert(db, camera=unmatched_camera, handheld=unmatched_handheld)
+    for camera in unmatched_cameras:
+        for handheld in unmatched_handhelds:
+            if _close_enough(camera.lat, camera.lng, handheld.lat, handheld.lng):
+                return _make_alert(db, camera=camera, handheld=handheld)
 
     return None
 
