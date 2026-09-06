@@ -190,6 +190,7 @@ def _alert_to_dict(alert: models.Alert) -> dict:
         "camera_confidence": alert.camera_confidence,
         "handheld_reading": alert.handheld_reading,
         "object_type": alert.object_type,
+        "reading_type": alert.reading_type,
         "lat": alert.lat,
         "lng": alert.lng,
         "device_ids": alert.device_ids,
