@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pt
+alerts/
+*.pyc
+test_camera.jpg
+node_modules/

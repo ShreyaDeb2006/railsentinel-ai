@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RailSentinel · Field</title>
+<style>
+  :root{
+    --void:#0B0F14;
+    --panel:#121822;
+    --panel-raised:#161E2A;
+    --hairline:#232C38;
+    --text:#E8EDF2;
+    --text-muted:#7C8896;
+    --amber:#F2A93B;
+    --high:#E2504C;
+    --uncertain:#F2A93B;
+    --low:#4FAE7C;
+    --pending:#5B84C4;
+    --tabbar-h:64px;
+    --floating-graphs-reserve:230px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--void);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    height:100%;
+    overflow-x:hidden;}
+  @media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important;} }
+
+  .mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;}
+
+  /* ---------- Top bar ---------- */
+  header{
+    position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;background:var(--void);
+    border-bottom:1px solid var(--hairline);
+  }
+  .brand{display:flex;flex-direction:column;line-height:1.05;min-width:0;}
+  .brand .name{
+    font-weight:800;font-stretch:condensed;letter-spacing:.2px;
+    font-size:1.05rem;
+  }
+  .brand .sub{color:var(--text-muted);font-size:.72rem;letter-spacing:.08em;margin-top:2px;}
+  .top-actions{display:flex;align-items:center;gap:14px;flex:none;}
+  .status{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--text-muted);}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--text-muted);flex:none;}
+  .dot.live{background:var(--low);box-shadow:0 0 0 0 rgba(79,174,124,.6);animation:pulse 2s infinite;}
+  .dot.down{background:var(--high);}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(79,174,124,.55);}
+    70%{box-shadow:0 0 0 7px rgba(79,174,124,0);}
+    100%{box-shadow:0 0 0 0 rgba(79,174,124,0);}
+  }
+  .icon-btn{
+    background:none;border:1px solid var(--hairline);color:var(--text);
+    width:34px;height:34px;border-radius:4px;display:flex;align-items:center;justify-content:center;
+    font-size:1rem;cursor:pointer;flex:none;
+  }
+  .icon-btn:active{background:var(--panel-raised);}
+
+  /* ---------- Filter row ---------- */
+  .filters{
+    display:flex;gap:8px;padding:10px 16px;overflow-x:auto;
+    border-bottom:1px solid var(--hairline);
+    -webkit-overflow-scrolling:touch;
+  }
+  .filters::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:none;padding:6px 12px;border-radius:999px;border:1px solid var(--hairline);
+    background:var(--panel);color:var(--text-muted);font-size:.78rem;font-weight:600;
+    letter-spacing:.02em;cursor:pointer;
+  }
+  .chip.active{color:var(--void);border-color:transparent;}
+  .chip[data-filter="all"].active{background:var(--text);}
+  .chip[data-filter="HIGH"].active{background:var(--high);}
+  .chip[data-filter="UNCERTAIN"].active{background:var(--uncertain);}
+  .chip[data-filter="LOW"].active{background:var(--low);}
+  .chip[data-filter="pending"].active{background:var(--pending);}
+
+  /* ---------- Tab panels ---------- */
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  main{
+    padding:14px 16px calc(var(--tabbar-h) + var(--floating-graphs-reserve) + env(safe-area-inset-bottom));
+    max-width:640px;margin:0 auto;
+    width:100%;
+  }
+  .empty{
+    text-align:center;color:var(--text-muted);padding:60px 20px;font-size:.9rem;
+  }
+  .empty strong{display:block;color:var(--text);font-size:1.05rem;margin-bottom:6px;font-weight:700;}
+
+  .card{
+    position:relative;display:flex;background:var(--panel);
+    border:1px solid var(--hairline);border-left:4px solid var(--pending);
+    margin-bottom:12px;overflow:hidden;
+  }
+  .card.level-HIGH{border-left-color:var(--high);}
+  .card.level-UNCERTAIN{border-left-color:var(--uncertain);}
+  .card.level-LOW{border-left-color:var(--low);}
+  .card.flash{animation:flash 1.4s ease-out;}
+  @keyframes flash{
+    0%{background:var(--panel-raised);}
+    100%{background:var(--panel);}
+  }
+
+  .card-body{flex:1;padding:12px 14px;min-width:0;}
+  .card-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+  .level-word{
+    font-weight:800;font-size:.92rem;letter-spacing:.04em;
+  }
+  .level-word.HIGH{color:var(--high);}
+  .level-word.UNCERTAIN{color:var(--uncertain);}
+  .level-word.LOW{color:var(--low);}
+  .card-time{color:var(--text-muted);font-size:.72rem;flex:none;}
+
+  .object-type{font-size:.98rem;margin-top:3px;text-transform:capitalize;word-break:break-word;}
+
+  .readings{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:.8rem;color:var(--text-muted);}
+  .readings b{color:var(--text);font-weight:600;}
+
+  .meta-row{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:9px;}
+  .meta-row .coords{color:var(--text-muted);font-size:.75rem;}
+  .tag{
+    background:var(--panel-raised);color:var(--text-muted);border-radius:3px;
+    padding:2px 6px;font-size:.68rem;letter-spacing:.02em;
+  }
+
+  .verify-row{display:flex;gap:8px;margin-top:12px;}
+  .btn{
+    flex:1;padding:10px 8px;border-radius:4px;border:1px solid var(--hairline);
+    background:var(--panel-raised);color:var(--text);font-size:.82rem;font-weight:700;
+    cursor:pointer;letter-spacing:.01em;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn.confirm{background:var(--high);border-color:var(--high);color:#fff;}
+  .btn.dismiss{background:transparent;color:var(--text-muted);}
+  .btn:disabled{opacity:.5;pointer-events:none;}
+
+  .resolved{
+    margin-top:12px;padding-top:10px;border-top:1px dashed var(--hairline);
+    display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.8rem;
+  }
+  .resolved .status-pill{
+    padding:3px 8px;border-radius:3px;font-weight:700;font-size:.7rem;letter-spacing:.03em;
+  }
+  .status-pill.confirmed_threat{background:rgba(226,80,76,.18);color:var(--high);}
+  .status-pill.false_alarm{background:rgba(79,174,124,.18);color:var(--low);}
+  .resolved .by{color:var(--text-muted);}
+
+  .toast{
+    position:fixed;left:16px;right:16px;bottom:calc(var(--tabbar-h) + 12px + env(safe-area-inset-bottom));z-index:40;
+    background:var(--panel-raised);border:1px solid var(--hairline);
+    padding:12px 14px;border-radius:6px;font-size:.85rem;
+    display:none;align-items:center;justify-content:space-between;gap:10px;
+    max-width:608px;margin:0 auto;
+  }
+  .toast.show{display:flex;}
+  .toast.error{border-color:var(--high);}
+  .toast button{background:none;border:0;color:var(--text-muted);font-size:.85rem;cursor:pointer;flex:none;}
+
+  /* ---------- Settings sheet ---------- */
+  .sheet-backdrop{
+    position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;
+    display:none;
+  }
+  .sheet-backdrop.open{display:block;}
+  .sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:51;
+    background:var(--panel);border-top:1px solid var(--hairline);
+    padding:18px 16px calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(100%);transition:transform .25s ease-out;
+    max-width:640px;margin:0 auto;
+  }
+  .sheet.open{transform:translateY(0);}
+  .sheet h2{font-size:1rem;margin:0 0 14px;font-weight:800;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:5px;letter-spacing:.02em;}
+  .field input{
+    width:100%;padding:10px 11px;border-radius:4px;border:1px solid var(--hairline);
+    background:var(--panel-raised);color:var(--text);font-size:.9rem;
+  }
+  .field input:focus{outline:1px solid var(--amber);outline-offset:0;}
+  .sheet-actions{display:flex;gap:8px;margin-top:6px;}
+  .sheet-actions .btn{background:var(--amber);color:#1a1200;border-color:var(--amber);}
+  .sheet-actions .btn.secondary{background:transparent;color:var(--text-muted);}
+
+  /* ---------- Add-alert tab ---------- */
+  #tabAdd.tab-panel.active{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;gap:18px;
+    min-height:min(64vh, 520px);
+    padding:32px 20px;
+  }
+  .add-copy{max-width:280px;}
+  .add-copy strong{display:block;font-size:1.05rem;margin-bottom:6px;}
+  .add-copy span{color:var(--text-muted);font-size:.85rem;}
+  .alert-btn{
+    width:min(42vw, 160px);
+    height:min(42vw, 160px);
+    border-radius:50%;
+    background:#E2231A;color:#FFFFFF;border:none;
+    font-size:1rem;font-weight:800;letter-spacing:.05em;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 18px rgba(0,0,0,.45);
+    cursor:pointer;flex:none;
+  }
+  .alert-btn:active{background:#B91C14;transform:translateY(1px);}
+
+  /* ---------- Bottom tab bar ---------- */
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:25;
+    height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom);
+    display:flex;
+    background:var(--panel);border-top:1px solid var(--hairline);
+    max-width:640px;margin:0 auto;
+  }
+  .tab-btn{
+    flex:1;background:none;border:none;color:var(--text-muted);
+    font-size:.78rem;font-weight:700;letter-spacing:.02em;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    cursor:pointer;
+  }
+  .tab-btn .tab-icon{font-size:1.15rem;line-height:1;}
+  .tab-btn.active{color:var(--text);}
+  .tab-btn.active .tab-icon{color:var(--amber);}
+
+  /* ---------- Floating graphs (false-positive + threat assessment) ---------- */
+  .floating-graphs{
+    position:fixed;
+    right:max(16px, env(safe-area-inset-right) + 12px);
+    bottom:calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom));
+    z-index:15;
+    display:flex;flex-direction:column;align-items:flex-end;gap:12px;
+    width:min(84vw, 300px);
+    pointer-events:none; /* overview only, doesn't block taps on the feed */
+  }
+  .graph-card{
+    width:100%;
+    display:flex;align-items:center;gap:clamp(10px,3vw,14px);
+    background:rgba(18,24,34,.92);
+    border:1px solid var(--hairline);
+    border-radius:16px;
+    padding:clamp(10px,3vw,14px) clamp(12px,3.5vw,16px);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    box-shadow:0 8px 22px rgba(0,0,0,.4);
+  }
+  .graph-card .ring{
+    width:clamp(64px,20vw,96px);
+    height:clamp(64px,20vw,96px);
+    border-radius:50%;flex:none;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .graph-card .ring-hole{
+    width:68%;height:68%;border-radius:50%;background:var(--panel-raised);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .graph-card .ring-hole .n{font-weight:800;font-size:clamp(.9rem,3vw,1.15rem);line-height:1;}
+  .graph-card .ring-hole .lbl{
+    font-size:clamp(.44rem,1.5vw,.52rem);color:var(--text-muted);
+    letter-spacing:.05em;margin-top:2px;text-align:center;
+  }
+  .graph-card .legend{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1;}
+  .graph-card .legend-title{
+    font-size:clamp(.6rem,2vw,.7rem);color:var(--text-muted);
+    text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .graph-card .legend-row{
+    display:flex;align-items:center;gap:6px;
+    font-size:clamp(.68rem,2.2vw,.8rem);color:var(--text-muted);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .graph-card .legend-row .sw{width:8px;height:8px;border-radius:2px;flex:none;}
+  .graph-card .legend-row .sw.high{background:var(--high);}
+  .graph-card .legend-row .sw.uncertain{background:var(--uncertain);}
+  .graph-card .legend-row .sw.low{background:var(--low);}
+  .graph-card .legend-row b{color:var(--text);font-weight:700;}
+
+  /* Small-screen safety: keep everything inside the viewport width */
+  @media (max-width:360px){
+    .brand .name{font-size:.95rem;}
+    .status{display:none;}
+  }
+  /* Roomy screens: cap the widget width so it doesn't sprawl */
+  @media (min-width:700px){
+    .floating-graphs{width:280px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="name">RAILSENTINEL</span>
+    <span class="sub">FIELD VERIFICATION</span>
+  </div>
+  <div class="top-actions">
+    <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">connecting</span></div>
+    <button class="icon-btn" id="settingsBtn" aria-label="Settings">&#9881;</button>
+  </div>
+</header>
+
+<div class="tab-panel active" id="tabAlerts">
+  <div class="filters" id="filters">
+    <button class="chip active" data-filter="all">All</button>
+    <button class="chip" data-filter="pending">Pending</button>
+    <button class="chip" data-filter="HIGH">High</button>
+    <button class="chip" data-filter="UNCERTAIN">Uncertain</button>
+    <button class="chip" data-filter="LOW">Low</button>
+  </div>
+
+  <main id="feed">
+    <div class="empty" id="emptyState">
+      <strong>No alerts yet</strong>
+      Detections from the camera and handheld units will appear here as they come in.
+    </div>
+  </main>
+
+  <div class="floating-graphs" id="floatingGraphs" aria-hidden="true">
+    <div class="graph-card" id="fpGraph">
+      <div class="ring" id="fpRing">
+        <div class="ring-hole">
+          <span class="n" id="fpPercent">—</span>
+          <span class="lbl">FALSE POS</span>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-title">Potential False Positive</div>
+        <div class="legend-row"><span class="sw low"></span><b id="fpFalseCount">0</b> false alarm</div>
+        <div class="legend-row"><span class="sw high"></span><b id="fpConfirmedCount">0</b> confirmed</div>
+      </div>
+    </div>
+
+    <div class="graph-card" id="threatGraph">
+      <div class="ring" id="threatRing">
+        <div class="ring-hole">
+          <span class="n" id="threatTotal">0</span>
+          <span class="lbl">TOTAL</span>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-title">Threat Assessment</div>
+        <div class="legend-row"><span class="sw high"></span><b id="threatHighCount">0</b> high</div>
+        <div class="legend-row"><span class="sw uncertain"></span><b id="threatUncertainCount">0</b> uncertain</div>
+        <div class="legend-row"><span class="sw low"></span><b id="threatLowCount">0</b> low</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-panel" id="tabAdd">
+  <div class="add-copy">
+    <strong>Report something in the field</strong>
+    <span>Use this if you're flagging a threat directly, without waiting on a camera or handheld reading.</span>
+  </div>
+  <button class="alert-btn" id="manualAlertBtn">ALERT</button>
+</div>
+
+<nav class="tabbar" id="tabbar">
+  <button class="tab-btn active" data-tab="tabAlerts">
+    <span class="tab-icon">&#9679;</span>
+    Alerts
+  </button>
+  <button class="tab-btn" data-tab="tabAdd">
+    <span class="tab-icon">&#65291;</span>
+    Add Alert
+  </button>
+</nav>
+
+<div class="toast" id="toast">
+  <span id="toastMsg"></span>
+  <button id="toastClose">Dismiss</button>
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="sheet" id="sheet">
+  <h2>Settings</h2>
+  <div class="field">
+    <label for="responderInput">Your name (recorded as verifier)</label>
+    <input id="responderInput" type="text" placeholder="e.g. J. Alvarez" autocomplete="name">
+  </div>
+  <div class="field">
+    <label for="backendInput">Backend URL</label>
+    <input id="backendInput" type="text" placeholder="http://127.0.0.1:8000" autocapitalize="off" autocorrect="off">
+  </div>
+  <div class="sheet-actions">
+    <button class="btn secondary" id="sheetCancel">Cancel</button>
+    <button class="btn" id="sheetSave">Save &amp; reconnect</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "railsentinel.field.settings";
+  var defaults = { backend: "http://127.0.0.1:8000", responder: "" };
+  var settings = Object.assign({}, defaults, readSettings());
+
+  function readSettings(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return {}; }
+  }
+  function saveSettings(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); }catch(e){}
+  }
+
+  var alerts = new Map(); // id -> alert object
+  var currentFilter = "all";
+  var ws = null;
+  var wsRetryTimer = null;
+  var wsRetryDelay = 1500;
+
+  var feedEl = document.getElementById("feed");
+  var emptyEl = document.getElementById("emptyState");
+  var connDot = document.getElementById("connDot");
+  var connLabel = document.getElementById("connLabel");
+  var toastEl = document.getElementById("toast");
+  var toastMsg = document.getElementById("toastMsg");
+
+  document.getElementById("toastClose").addEventListener("click", hideToast);
+
+  function showToast(msg, isError){
+    toastMsg.textContent = msg;
+    toastEl.classList.toggle("error", !!isError);
+    toastEl.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(hideToast, 4500);
+  }
+  function hideToast(){ toastEl.classList.remove("show"); }
+
+  function apiBase(){ return settings.backend.replace(/\/+$/, ""); }
+  function wsUrl(){
+    return apiBase().replace(/^http/i, "ws") + "/ws/alerts";
+  }
+
+  // ---------------- Tabs ----------------
+  document.getElementById("tabbar").addEventListener("click", function(e){
+    var btn = e.target.closest(".tab-btn");
+    if(!btn) return;
+    var target = btn.getAttribute("data-tab");
+    document.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.toggle("active", b === btn); });
+    document.querySelectorAll(".tab-panel").forEach(function(p){ p.classList.toggle("active", p.id === target); });
+  });
+
+  // ---------------- Settings sheet ----------------
+  var sheet = document.getElementById("sheet");
+  var sheetBackdrop = document.getElementById("sheetBackdrop");
+  var responderInput = document.getElementById("responderInput");
+  var backendInput = document.getElementById("backendInput");
+
+  function openSheet(){
+    responderInput.value = settings.responder;
+    backendInput.value = settings.backend;
+    sheet.classList.add("open");
+    sheetBackdrop.classList.add("open");
+  }
+  function closeSheet(){
+    sheet.classList.remove("open");
+    sheetBackdrop.classList.remove("open");
+  }
+  document.getElementById("settingsBtn").addEventListener("click", openSheet);
+  document.getElementById("sheetCancel").addEventListener("click", closeSheet);
+  sheetBackdrop.addEventListener("click", closeSheet);
+  document.getElementById("sheetSave").addEventListener("click", function(){
+    var newBackend = backendInput.value.trim() || defaults.backend;
+    settings.responder = responderInput.value.trim();
+    settings.backend = newBackend;
+    saveSettings();
+    closeSheet();
+    loadAlerts();
+    connectSocket();
+  });
+
+  // First run: if no responder set, prompt via the sheet.
+  if(!settings.responder){
+    setTimeout(openSheet, 300);
+  }
+
+  // ---------------- Filters ----------------
+  document.getElementById("filters").addEventListener("click", function(e){
+    var chip = e.target.closest(".chip");
+    if(!chip) return;
+    currentFilter = chip.getAttribute("data-filter");
+    document.querySelectorAll(".chip").forEach(function(c){ c.classList.toggle("active", c === chip); });
+    render();
+  });
+
+  // ---------------- Rendering ----------------
+  function timeAgo(iso){
+    var then = new Date(iso).getTime();
+    if(isNaN(then)) return "";
+    var diff = Math.max(0, Date.now() - then);
+    var mins = Math.floor(diff / 60000);
+    if(mins < 1) return "just now";
+    if(mins < 60) return mins + "m ago";
+    var hrs = Math.floor(mins / 60);
+    if(hrs < 24) return hrs + "h ago";
+    return Math.floor(hrs / 24) + "d ago";
+  }
+
+  function matchesFilter(a){
+    if(currentFilter === "all") return true;
+    if(currentFilter === "pending") return a.status === "pending_verification";
+    return a.threat_level === currentFilter;
+  }
+
+  function cardHtml(a, isNew){
+    var level = a.threat_level || "UNCERTAIN";
+    var pending = a.status === "pending_verification";
+    var readings = [];
+    if(a.camera_confidence !== null && a.camera_confidence !== undefined){
+      readings.push('<span><b>' + Math.round(a.camera_confidence * 100) + '%</b> camera</span>');
+    }
+    if(a.handheld_reading !== null && a.handheld_reading !== undefined){
+      readings.push('<span><b>' + a.handheld_reading + '</b> handheld</span>');
+    }
+    var deviceTags = (a.device_ids || "").split(",").filter(Boolean)
+      .map(function(d){ return '<span class="tag">' + escapeHtml(d.trim()) + '</span>'; }).join("");
+
+    var actionArea;
+    if(pending){
+      actionArea =
+        '<div class="verify-row">' +
+          '<button class="btn confirm" data-action="confirmed_threat" data-id="' + a.id + '">Confirm threat</button>' +
+          '<button class="btn dismiss" data-action="false_alarm" data-id="' + a.id + '">False alarm</button>' +
+        '</div>';
+    } else {
+      actionArea =
+        '<div class="resolved">' +
+          '<span class="status-pill ' + escapeHtml(a.status) + '">' + escapeHtml((a.status || "").replace(/_/g," ")) + '</span>' +
+          '<span class="by">verified by ' + escapeHtml(a.verified_by || "unknown") + '</span>' +
+        '</div>';
+    }
+
+    return (
+      '<div class="card level-' + level + (isNew ? ' flash' : '') + '" data-id="' + a.id + '">' +
+        '<div class="card-body">' +
+          '<div class="card-head">' +
+            '<span class="level-word ' + level + '">' + level + '</span>' +
+            '<span class="card-time">' + timeAgo(a.timestamp) + '</span>' +
+          '</div>' +
+          '<div class="object-type">' + escapeHtml(a.object_type || "unclassified object") + '</div>' +
+          (readings.length ? '<div class="readings">' + readings.join("") + '</div>' : '') +
+          '<div class="meta-row">' +
+            '<span class="coords mono">' + Number(a.lat).toFixed(4) + ', ' + Number(a.lng).toFixed(4) + '</span>' +
+            deviceTags +
+          '</div>' +
+          actionArea +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function escapeHtml(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  var newlyArrivedIds = new Set();
+  var MAX_ALERTS = 500; // cap in-memory history so long shifts don't grow this unbounded
+
+  var threatRingEl = document.getElementById("threatRing");
+  var threatTotalEl = document.getElementById("threatTotal");
+  var threatHighEl = document.getElementById("threatHighCount");
+  var threatUncertainEl = document.getElementById("threatUncertainCount");
+  var threatLowEl = document.getElementById("threatLowCount");
+
+  var fpRingEl = document.getElementById("fpRing");
+  var fpPercentEl = document.getElementById("fpPercent");
+  var fpFalseEl = document.getElementById("fpFalseCount");
+  var fpConfirmedEl = document.getElementById("fpConfirmedCount");
+
+  // Of the alerts a responder has actually verified, how many turned
+  // out to be false alarms vs confirmed threats — i.e. the real,
+  // measured false-positive rate, not a guess. Sits above the threat
+  // assessment ring since it's read the same way (a quick glance at
+  // the corner of the screen), but it's fed by `status`, not
+  // `threat_level`.
+  function renderFalsePositiveGraph(){
+    var falseAlarm = 0, confirmed = 0;
+    alerts.forEach(function(a){
+      if(a.status === "false_alarm") falseAlarm++;
+      else if(a.status === "confirmed_threat") confirmed++;
+    });
+    var verified = falseAlarm + confirmed;
+
+    fpFalseEl.textContent = falseAlarm;
+    fpConfirmedEl.textContent = confirmed;
+
+    if(verified === 0){
+      fpPercentEl.textContent = "—";
+      fpRingEl.style.background = "var(--hairline)";
+      return;
+    }
+    var pct = Math.round((falseAlarm / verified) * 100);
+    fpPercentEl.textContent = pct + "%";
+    var falseEnd = (falseAlarm / verified) * 360;
+    fpRingEl.style.background =
+      "conic-gradient(var(--low) 0deg " + falseEnd + "deg, " +
+      "var(--high) " + falseEnd + "deg 360deg)";
+  }
+
+  // Live HIGH/UNCERTAIN/LOW breakdown across everything currently held
+  // in memory (independent of the active filter chip, so it always
+  // reads as an overall situational snapshot). Drawn as a CSS
+  // conic-gradient ring rather than pulling in a charting library for
+  // one small widget.
+  function renderThreatGraph(){
+    renderFalsePositiveGraph();
+
+    var high = 0, uncertain = 0, low = 0;
+    alerts.forEach(function(a){
+      if(a.threat_level === "HIGH") high++;
+      else if(a.threat_level === "UNCERTAIN") uncertain++;
+      else if(a.threat_level === "LOW") low++;
+    });
+    var total = high + uncertain + low;
+
+    threatTotalEl.textContent = total;
+    threatHighEl.textContent = high;
+    threatUncertainEl.textContent = uncertain;
+    threatLowEl.textContent = low;
+
+    if(total === 0){
+      threatRingEl.style.background = "var(--hairline)";
+      return;
+    }
+    var highEnd = (high / total) * 360;
+    var uncertainEnd = highEnd + (uncertain / total) * 360;
+    threatRingEl.style.background =
+      "conic-gradient(var(--high) 0deg " + highEnd + "deg, " +
+      "var(--uncertain) " + highEnd + "deg " + uncertainEnd + "deg, " +
+      "var(--low) " + uncertainEnd + "deg 360deg)";
+  }
+
+  // Full rebuild — used for the initial load and whenever the filter
+  // changes (both cases already need every card touched).
+  function render(){
+    var list = Array.from(alerts.values())
+      .filter(matchesFilter)
+      .sort(function(a, b){ return new Date(b.timestamp) - new Date(a.timestamp); });
+
+    if(list.length === 0){
+      feedEl.innerHTML = "";
+      feedEl.appendChild(emptyEl);
+      emptyEl.style.display = "block";
+      renderThreatGraph();
+      return;
+    }
+    emptyEl.style.display = "none";
+    feedEl.innerHTML = list.map(function(a){
+      var isNew = newlyArrivedIds.has(a.id);
+      return cardHtml(a, isNew);
+    }).join("");
+    newlyArrivedIds.clear();
+    renderThreatGraph();
+  }
+
+  function htmlToElement(html){
+    var tmp = document.createElement("div");
+    tmp.innerHTML = html.trim();
+    return tmp.firstElementChild;
+  }
+
+  // Incremental update for a single alert — used for WS traffic so a
+  // live feed doesn't tear down and rebuild every card (and reset
+  // scroll position) on every message. Falls back to a full render()
+  // whenever the DOM is empty/out of sync, which is cheap and safe.
+  function patchAlert(a, isNew){
+    var id = String(a.id);
+    var existing = feedEl.querySelector('.card[data-id="' + id + '"]');
+    var matches = matchesFilter(a);
+
+    if(!matches){
+      if(existing) existing.remove();
+      if(!feedEl.querySelector(".card")) render();
+      else renderThreatGraph();
+      return;
+    }
+
+    if(existing){
+      // Same sort position (timestamp doesn't change on a status
+      // update), so just swap its contents in place.
+      var replacement = htmlToElement(cardHtml(a, false));
+      existing.replaceWith(replacement);
+      renderThreatGraph();
+      return;
+    }
+
+    if(feedEl.querySelector(".card") === null){
+      // First card, or list was showing the empty state — full render
+      // is simplest and just as cheap here.
+      render();
+      return;
+    }
+
+    if(isNew){
+      // New alerts are the newest by definition, so they belong at the
+      // top of the (timestamp-desc) sorted feed.
+      emptyEl.style.display = "none";
+      feedEl.insertBefore(htmlToElement(cardHtml(a, true)), feedEl.firstChild);
+      renderThreatGraph();
+    } else {
+      // Alert we haven't seen before but isn't "new" (e.g. arrived via
+      // a filter switch) — safest to just re-render fully.
+      render();
+    }
+  }
+
+  function trimAlertsIfNeeded(){
+    if(alerts.size <= MAX_ALERTS) return;
+    var sorted = Array.from(alerts.values())
+      .sort(function(a, b){ return new Date(b.timestamp) - new Date(a.timestamp); });
+    alerts.clear();
+    sorted.slice(0, MAX_ALERTS).forEach(function(a){ alerts.set(String(a.id), a); });
+    render();
+  }
+
+  // Only touch the relative-time text nodes on the periodic tick,
+  // instead of rebuilding every card just to update a label.
+  function refreshTimeLabels(){
+    feedEl.querySelectorAll(".card[data-id]").forEach(function(card){
+      var a = alerts.get(card.getAttribute("data-id"));
+      if(!a) return;
+      var timeEl = card.querySelector(".card-time");
+      if(timeEl) timeEl.textContent = timeAgo(a.timestamp);
+    });
+  }
+
+  feedEl.addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-action]");
+    if(!btn) return;
+    var id = btn.getAttribute("data-id");
+    var action = btn.getAttribute("data-action");
+    submitVerification(id, action);
+  });
+
+  // ---------------- Networking ----------------
+  function loadAlerts(){
+    setConn("connecting", null);
+    fetch(apiBase() + "/api/alerts")
+      .then(function(r){
+        if(!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function(data){
+        alerts.clear();
+        data
+          .slice()
+          .sort(function(a, b){ return new Date(b.timestamp) - new Date(a.timestamp); })
+          .slice(0, MAX_ALERTS)
+          .forEach(function(a){ alerts.set(String(a.id), a); });
+        render();
+      })
+      .catch(function(err){
+        showToast("Couldn't reach the backend at " + apiBase() + ". Check the URL in settings.", true);
+      });
+  }
+
+  function submitVerification(id, finalStatus){
+    if(!settings.responder){
+      openSheet();
+      showToast("Add your name in settings before verifying an alert.", true);
+      return;
+    }
+    var card = feedEl.querySelector('.card[data-id="' + id + '"]');
+    if(card){
+      card.querySelectorAll("button").forEach(function(b){ b.disabled = true; });
+    }
+    fetch(apiBase() + "/api/verify/" + id, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ verified_by: settings.responder, final_status: finalStatus })
+    })
+      .then(function(r){
+        if(!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function(){
+        if(!ws || ws.readyState !== WebSocket.OPEN){
+          loadAlerts();
+        }
+      })
+      .catch(function(){
+        showToast("Couldn't submit that verification. Still connected to the backend?", true);
+        if(card){
+          card.querySelectorAll("button").forEach(function(b){ b.disabled = false; });
+        }
+      });
+  }
+
+  function setConn(state, label){
+    connDot.className = "dot" + (state === "live" ? " live" : state === "down" ? " down" : "");
+    connLabel.textContent = label || state;
+  }
+
+  function connectSocket(){
+    clearTimeout(wsRetryTimer);
+    if(ws){
+      try{ ws.onclose = null; ws.close(); }catch(e){}
+    }
+    try{
+      ws = new WebSocket(wsUrl());
+    }catch(e){
+      setConn("down", "offline");
+      scheduleReconnect();
+      return;
+    }
+    ws.onopen = function(){
+      setConn("live", "live");
+      wsRetryDelay = 1500;
+    };
+    ws.onmessage = function(evt){
+      try{
+        var msg = JSON.parse(evt.data);
+        if(msg && msg.alert){
+          var id = String(msg.alert.id);
+          var isFresh = msg.type === "new_alert" && !alerts.has(id);
+          alerts.set(id, msg.alert);
+          patchAlert(msg.alert, isFresh);
+          trimAlertsIfNeeded();
+        }
+      }catch(e){}
+    };
+    ws.onclose = function(){
+      setConn("down", "offline");
+      scheduleReconnect();
+    };
+    ws.onerror = function(){
+      try{ ws.close(); }catch(e){}
+    };
+  }
+
+  function scheduleReconnect(){
+    clearTimeout(wsRetryTimer);
+    wsRetryTimer = setTimeout(connectSocket, wsRetryDelay);
+    wsRetryDelay = Math.min(wsRetryDelay * 1.5, 15000);
+  }
+
+  // Refresh relative timestamps periodically without rebuilding the feed.
+  setInterval(refreshTimeLabels, 30000);
+
+  // ---------------- Manual alert button ----------------
+  // Note: the backend doesn't currently expose an endpoint for a
+  // field-initiated alert, so this raises a local confirmation for now.
+  // Wire it to a real POST (e.g. /api/manual-alert) once that route exists.
+  document.getElementById("manualAlertBtn").addEventListener("click", function(){
+    if(window.confirm("Send a manual alert to the dashboard?")){
+      showToast("Manual alert flagged locally. No backend endpoint is wired up yet.");
+    }
+  });
+
+  loadAlerts();
+  connectSocket();
+})();
+</script>
+</body>
+</html>
