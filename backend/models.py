@@ -45,7 +45,8 @@ class Alert(Base):
     threat_level = Column(String)  # "LOW", "UNCERTAIN", "HIGH"
     camera_confidence = Column(Float, nullable=True)
     handheld_reading = Column(Float, nullable=True)
-    object_type = Column(String, nullable=True)
+    object_type = Column(String, nullable=True)  # from camera, e.g. "person"
+    reading_type = Column(String, nullable=True)  # from handheld, e.g. "vibration"
     lat = Column(Float)
     lng = Column(Float)
     device_ids = Column(String)  # comma-separated, e.g. "cam_01,handheld_01"
