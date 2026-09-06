@@ -48,11 +48,6 @@ def draw_object(frame, det):
         det["threat_level"]
     ]
 
-    # "predicted" = this frame's YOLO pass missed/low-confidence'd
-    # the bag, so we're drawing its last known position from the
-    # tracker's grace period instead of a fresh detection. Thinner
-    # line makes that visible instead of pretending it's a fresh hit,
-    # while still keeping the box on screen so it doesn't flicker.
     thickness = 1 if det.get("predicted") else 2
 
     cv2.rectangle(
@@ -82,13 +77,7 @@ def draw_object(frame, det):
 
 def open_camera(source):
     """
-    Tries a few different OpenCV backends before giving up. A plain
-    cv2.VideoCapture(source) can fail to open a perfectly working
-    webcam on some Windows/Linux setups depending on which backend
-    OpenCV picks by default (MSMF vs DSHOW vs V4L2) - this tries the
-    common ones in order and reports exactly what was tried so a
-    real "no camera at all" problem is easy to tell apart from a
-    "wrong backend" problem.
+    Tries a few different OpenCV backends before giving up.
     """
 
     backends_to_try = [
@@ -101,7 +90,7 @@ def open_camera(source):
     for backend, label in backends_to_try:
 
         if backend is None and label != "default":
-            continue  # backend constant doesn't exist on this OS/build
+            continue
 
         cap = (
             cv2.VideoCapture(source)
@@ -127,9 +116,6 @@ def resize_to_screen(
     """
     Fits the camera frame to the entire screen
     while preserving its original aspect ratio.
-
-    Empty areas are filled with black instead
-    of stretching the image.
     """
 
     frame_height, frame_width = frame.shape[:2]
@@ -139,13 +125,8 @@ def resize_to_screen(
         screen_height / frame_height
     )
 
-    new_width = int(
-        frame_width * scale
-    )
-
-    new_height = int(
-        frame_height * scale
-    )
+    new_width = int(frame_width * scale)
+    new_height = int(frame_height * scale)
 
     resized = cv2.resize(
         frame,
@@ -154,26 +135,14 @@ def resize_to_screen(
     )
 
     output = np.zeros(
-        (
-            screen_height,
-            screen_width,
-            3
-        ),
+        (screen_height, screen_width, 3),
         dtype=frame.dtype
     )
 
-    x = (
-        screen_width - new_width
-    ) // 2
+    x = (screen_width - new_width) // 2
+    y = (screen_height - new_height) // 2
 
-    y = (
-        screen_height - new_height
-    ) // 2
-
-    output[
-        y:y + new_height,
-        x:x + new_width
-    ] = resized
+    output[y:y + new_height, x:x + new_width] = resized
 
     return output
 
@@ -182,206 +151,86 @@ def main():
 
     print("Starting RailSentinel AI...")
 
-    # -----------------------------
-    # Create detector and tracker
-    # -----------------------------
-
     detector = Detector()
-
     tracker = ObjectTracker()
 
-    # -----------------------------
-    # Open camera
-    # -----------------------------
-
-    cap = open_camera(
-        config.CAMERA_SOURCE
-    )
+    cap = open_camera(config.CAMERA_SOURCE)
 
     if cap is None:
-
         print(
             "Could not open camera/video source "
             f"({config.CAMERA_SOURCE!r}) with any backend."
         )
-
-        print(
-            "- Check CAMERA_SOURCE in config.py is the right "
-            "index/path/URL."
-        )
-
-        print(
-            "- Check no other application (Zoom, Teams, another "
-            "Python process, etc.) is already holding the camera."
-        )
-
-        print(
-            "- Check the OS actually granted this program camera "
-            "permission."
-        )
-
+        print("- Check CAMERA_SOURCE in config.py is the right index/path/URL.")
+        print("- Check no other application is already holding the camera.")
+        print("- Check the OS actually granted this program camera permission.")
         return
 
-    # -----------------------------
-    # Create full-screen window
-    # -----------------------------
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.REQUESTED_CAMERA_WIDTH)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.REQUESTED_CAMERA_HEIGHT)
 
-    cv2.namedWindow(
-        WINDOW_NAME,
-        cv2.WINDOW_NORMAL
+    actual_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    actual_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    print(
+        f"Camera capture resolution: {actual_w}x{actual_h} "
+        f"(requested {config.REQUESTED_CAMERA_WIDTH}x{config.REQUESTED_CAMERA_HEIGHT})"
     )
+    print(f"YOLO inference resolution (imgsz): {config.MODEL_IMG_SIZE}")
 
-    cv2.setWindowProperty(
-        WINDOW_NAME,
-        cv2.WND_PROP_FULLSCREEN,
-        cv2.WINDOW_FULLSCREEN
-    )
-
-    # -----------------------------
-    # Get screen size
-    # -----------------------------
+    cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
+    cv2.setWindowProperty(WINDOW_NAME, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
     screen_width = 1920
     screen_height = 1080
 
-    print(
-        "Running RailSentinel AI."
-    )
-
-    print(
-        "Press 'q' to quit."
-    )
-
-    # -----------------------------
-    # Track alerts already sent
-    # -----------------------------
+    print("Running RailSentinel AI.")
+    print("Press 'q' to quit.")
 
     already_alerted = set()
-
-    # -----------------------------
-    # Main camera loop
-    # -----------------------------
+    printed_frame_shape = False
 
     while True:
 
         ok, frame = cap.read()
 
         if not ok:
-
-            print(
-                "End of stream."
-            )
-
+            print("End of stream.")
             break
 
-        # -------------------------
-        # YOLO detection
-        # -------------------------
+        if not printed_frame_shape:
+            h, w = frame.shape[:2]
+            print(f"Actual first captured frame shape: {w}x{h}")
+            printed_frame_shape = True
 
-        detections = detector.detect(
-            frame
-        )
-
-        # -------------------------
-        # Threat tracking
-        # -------------------------
-
-        tracked_objects = tracker.update(
-            detections
-        )
-
-        # -------------------------
-        # Draw people
-        # -------------------------
+        detections = detector.detect(frame)
+        tracked_objects = tracker.update(detections)
 
         for det in detections:
-
             if det["class_name"] == "person":
-
-                draw_person(
-                    frame,
-                    det
-                )
-
-        # -------------------------
-        # Draw bags and alerts
-        # -------------------------
+                draw_person(frame, det)
 
         for obj in tracked_objects:
 
-            draw_object(
-                frame,
-                obj
-            )
-
-            # ---------------------
-            # HIGH alert
-            # ---------------------
+            draw_object(frame, obj)
 
             if (
                 obj["threat_level"] == "HIGH"
                 and not obj.get("predicted")
-                and
-                obj["object_id"]
-                not in already_alerted
+                and obj["object_id"] not in already_alerted
             ):
+                send_alert(frame, obj)
+                already_alerted.add(obj["object_id"])
+                secs = obj["unattended_seconds"]
+                print(f"[ALERT] {obj['class_name']} unattended {secs}s -> HIGH")
 
-                send_alert(
-                    frame,
-                    obj
-                )
+        display_frame = resize_to_screen(frame, screen_width, screen_height)
+        cv2.imshow(WINDOW_NAME, display_frame)
 
-                already_alerted.add(
-                    obj["object_id"]
-                )
-
-                secs = (
-                    obj["unattended_seconds"]
-                )
-
-                print(
-                    f"[ALERT] "
-                    f"{obj['class_name']} "
-                    f"unattended "
-                    f"{secs}s -> HIGH"
-                )
-
-        # -------------------------
-        # Resize without stretching
-        # -------------------------
-
-        display_frame = resize_to_screen(
-            frame,
-            screen_width,
-            screen_height
-        )
-
-        # -------------------------
-        # Show frame
-        # -------------------------
-
-        cv2.imshow(
-            WINDOW_NAME,
-            display_frame
-        )
-
-        # -------------------------
-        # Quit with Q
-        # -------------------------
-
-        if (
-            cv2.waitKey(1) & 0xFF
-            == ord("q")
-        ):
-
+        if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
-    # -----------------------------
-    # Clean up
-    # -----------------------------
-
     cap.release()
-
     cv2.destroyAllWindows()
 
 

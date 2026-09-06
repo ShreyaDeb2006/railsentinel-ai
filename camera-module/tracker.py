@@ -19,9 +19,10 @@ class ObjectTracker:
     from flickering off and on when the bag hasn't actually moved.
     """
 
-    def __init__(self):
+    def __init__(self, debug=None):
         self.tracked = {}
         self.next_id = 0
+        self.debug = config.DEBUG if debug is None else debug
 
     def _match_or_create(self, centroid, now):
 
@@ -193,6 +194,17 @@ class ObjectTracker:
                 ),
                 "predicted": state.get("missing", False),
             })
+
+            if self.debug:
+                tag = " (predicted/grace)" if state.get("missing") else ""
+                print(
+                    f"[TRACKER] track_id={obj_id} "
+                    f"class={state['class_name']}{tag}"
+                )
+                print(
+                    f"[THREAT] {state['class_name']} (id={obj_id}) "
+                    f"unattended for {unattended_for:.1f}s -> {level}"
+                )
 
         # ------------------------------------------------------
         # Only fully forget a track after TRACK_FORGET_SEC with

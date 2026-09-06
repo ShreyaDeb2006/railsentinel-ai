@@ -114,6 +114,10 @@ def send_alert(frame, detection):
 
     try:
 
+        if config.DEBUG:
+            print(f"[BACKEND] POST {config.BACKEND_API_URL}")
+            print(f"[BACKEND] payload: {backend_payload}")
+
         resp = requests.post(
             config.BACKEND_API_URL,
             json=backend_payload,
@@ -126,6 +130,8 @@ def send_alert(frame, detection):
                 f"({resp.status_code}): {resp.text}"
             )
         else:
+            if config.DEBUG:
+                print(f"[BACKEND] {resp.status_code} {resp.text}")
             print(
                 f"[camera-module] Sent to backend OK: "
                 f"{resp.json()}"
