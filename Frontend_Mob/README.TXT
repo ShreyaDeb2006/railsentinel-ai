@@ -32,6 +32,8 @@ Start it first:
 (defaults to http://127.0.0.1:8000)
 
 - The React app's backend URL is set in src/api.js (API_BASE / WS_URL).
+
+If index file doesnot open, add "/field.html" to the end of the localhost url
 - field.html's backend URL is set via its in-app Settings sheet
   (gear icon, top right) - defaults to http://127.0.0.1:8000.
   Enter just the bare origin there, with no path (not .../docs).
