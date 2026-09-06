@@ -23,9 +23,9 @@ MODEL_PATH = "yolov8n.pt"
 CONFIDENCE_THRESHOLD = 0.45
 
 # Higher input resolution = the model sees more detail on small/far
-# away objects, which is the #1 fix for "bag detected as person".
-# Must be a multiple of 32. 640 is the YOLO default; 960 is a good
-# accuracy upgrade if your hardware can keep up.
+# away objects, which helps with "bag detected as person". Must be a
+# multiple of 32. 640 is the YOLO default; 960 is a good accuracy
+# upgrade if your hardware can keep up.
 MODEL_IMG_SIZE = 960
 
 # "cpu", "cuda" (Nvidia GPU) or "mps" (Apple Silicon).
@@ -54,9 +54,29 @@ TRACK_FORGET_SEC = 5
 
 
 # ---- Backend integration ----
-BACKEND_API_URL = "http://localhost:5000/api/alerts"
+# MUST match backend/main.py's actual endpoint. FastAPI/uvicorn's
+# default port is 8000 (from `uvicorn main:app --reload`), and the
+# camera module posts to POST /api/camera-detection - NOT /api/alerts
+# (that path is GET-only, for the dashboard to read already-fused
+# alerts back out). Posting to the wrong URL fails silently from the
+# camera module's point of view (it just logs "backend not reachable"
+# and keeps going), which is why this is easy to miss.
+BACKEND_API_URL = "http://localhost:8000/api/camera-detection"
 
 DEVICE_ID = "AI-CAM-01"
+
+# The backend's schema (schemas.CameraDetectionIn) REQUIRES a gps
+# {lat, lng} object with every detection - it has no "unknown
+# location" option. Set this to where this camera is physically
+# installed (e.g. the platform/entrance it covers).
+CAMERA_LAT = 26.1445
+CAMERA_LNG = 91.7362
+
+# A lone camera detection only becomes a dashboard Alert once it's
+# either paired with a handheld reading within fusion.TIME_WINDOW_SECONDS
+# (30s), or that window expires and the backend's stale-sweep turns it
+# into a solo alert. So a camera-only detection can take up to ~30s to
+# show up on the dashboard - that's the fusion design, not a bug.
 
 
 # ---- Output ----

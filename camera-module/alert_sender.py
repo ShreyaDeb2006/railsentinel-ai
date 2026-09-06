@@ -1,6 +1,8 @@
 import os
 import json
 import time
+from datetime import datetime, timezone
+
 import cv2
 import requests
 import config
@@ -45,17 +47,32 @@ def _append_local_log(alert):
 
 def send_alert(frame, detection):
     """
-    Saves a snapshot, logs the alert locally,
-    and tries to send it to the backend.
+    Saves a snapshot, logs the alert locally, and POSTs it to the
+    backend using the EXACT shape backend/schemas.py:CameraDetectionIn
+    requires:
+
+        {
+          "device_id": str,
+          "object_type": str,
+          "confidence": float,
+          "gps": {"lat": float, "lng": float},
+          "timestamp": <ISO-8601 datetime string>
+        }
+
+    Sending anything else (extra/renamed fields, a missing "gps", or
+    a non-ISO timestamp) makes FastAPI reject it with a 422 before it
+    ever reaches the fusion/alert logic - which is why alerts from
+    this module might never have been showing up on the dashboard.
     """
 
-    timestamp = time.strftime(
-        "%Y%m%d-%H%M%S"
-    )
+    now = datetime.now(timezone.utc)
+
+    # Local filename still uses a filesystem-safe format.
+    file_timestamp = now.strftime("%Y%m%d-%H%M%S")
 
     snapshot_name = (
         f"alert_{detection['object_id']}_"
-        f"{timestamp}.jpg"
+        f"{file_timestamp}.jpg"
     )
 
     snapshot_path = os.path.join(
@@ -68,52 +85,59 @@ def send_alert(frame, detection):
         frame
     )
 
-    alert = {
-
-        "device_id": config.DEVICE_ID,
-
-        "timestamp": timestamp,
-
-        "object_class":
-            detection["class_name"],
-
-        "threat_level":
-            detection["threat_level"],
-
-        "unattended_seconds":
-            detection["unattended_seconds"],
-
-        "confidence":
-            round(
-                detection["confidence"],
-                2
-            ),
-
-        "snapshot":
-            snapshot_path,
+    # ---- Payload sent to the backend: must match schemas.CameraDetectionIn ----
+    backend_payload = {
+        "device_id": detection.get(
+            "device_id", config.DEVICE_ID
+        ),
+        "object_type": detection["class_name"],
+        "confidence": round(detection["confidence"], 2),
+        "gps": {
+            "lat": config.CAMERA_LAT,
+            "lng": config.CAMERA_LNG,
+        },
+        # ISO-8601, timezone-aware - this is the format Pydantic's
+        # datetime validator actually accepts.
+        "timestamp": now.isoformat(),
     }
 
-    # Always save locally first.
+    # ---- Everything else, kept locally for our own debugging/audit ----
+    local_alert = {
+        **backend_payload,
+        "threat_level": detection["threat_level"],
+        "unattended_seconds": detection["unattended_seconds"],
+        "snapshot": snapshot_path,
+    }
 
-    _append_local_log(alert)
-
-    # Try the backend.
+    # Always save locally first, regardless of backend reachability.
+    _append_local_log(local_alert)
 
     try:
 
-        requests.post(
+        resp = requests.post(
             config.BACKEND_API_URL,
-            json=alert,
+            json=backend_payload,
             timeout=2
         )
 
-    except requests.exceptions.RequestException:
+        if resp.status_code >= 400:
+            print(
+                "[camera-module] Backend REJECTED the alert "
+                f"({resp.status_code}): {resp.text}"
+            )
+        else:
+            print(
+                f"[camera-module] Sent to backend OK: "
+                f"{resp.json()}"
+            )
+
+    except requests.exceptions.RequestException as exc:
 
         print(
             "[camera-module] "
             "Backend not reachable, "
             f"alert saved locally: "
-            f"{snapshot_name}"
+            f"{snapshot_name} ({exc})"
         )
 
-    return alert
+    return local_alert

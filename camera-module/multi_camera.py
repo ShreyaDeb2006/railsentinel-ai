@@ -1,10 +1,17 @@
 """
 Runs the detector + tracker pipeline on several camera sources at
 once (webcam + RTSP feeds + video files, any mix), each in its own
-thread with its own window.
+thread with its own window - closer to how a real CCTV control room
+scans many feeds in parallel.
+
+Note: within a SINGLE feed, detector.py/tracker.py already handle any
+number of people and bags at once (they loop over every detection in
+the frame) - this file is for running multiple separate CAMERAS at
+once, not for detecting more objects per camera.
 
 Usage:
-    1. Edit CAMERA_SOURCES in config.py with your feeds.
+    1. Edit CAMERA_SOURCES in config.py with your feeds, e.g.:
+       CAMERA_SOURCES = [0, "rtsp://.../stream1", "videos/plat2.mp4"]
     2. python multi_camera.py
     3. Press 'q' in any window to stop that feed; Ctrl+C stops all.
 """
@@ -16,28 +23,34 @@ from detector import Detector
 from tracker import ObjectTracker
 from alert_sender import send_alert
 import config
-import main as single_cam
+import main as single_cam  # reuse draw_person / draw_object
 
 
 def run_camera(source, cam_index):
 
     window_name = f"RailSentinel AI - Camera {cam_index}"
 
+    # Each camera gets its OWN detector + tracker instance.
+    # Sharing one Detector object across threads is unsafe with
+    # some YOLO/torch backends, and sharing one tracker would mix
+    # up bag IDs between unrelated cameras.
     detector = Detector()
     tracker = ObjectTracker()
 
-    cap = cv2.VideoCapture(source)
+    cap = single_cam.open_camera(source)
 
-    if not cap.isOpened():
+    if cap is None:
         print(f"[cam {cam_index}] Could not open source: {source}")
         return
 
     already_alerted = set()
+
     print(f"[cam {cam_index}] started on source: {source}")
 
     while True:
 
         ok, frame = cap.read()
+
         if not ok:
             print(f"[cam {cam_index}] stream ended.")
             break
@@ -58,13 +71,18 @@ def run_camera(source, cam_index):
                 and not obj.get("predicted")
                 and obj["object_id"] not in already_alerted
             ):
+                # Tag which physical camera raised it so the
+                # backend/dashboard can show the right device_id.
                 obj_with_source = {
                     **obj,
                     "device_id": f"{config.DEVICE_ID}-{cam_index}",
                 }
                 send_alert(frame, obj_with_source)
                 already_alerted.add(obj["object_id"])
-                print(f"[cam {cam_index}] ALERT {obj['class_name']} -> HIGH")
+                print(
+                    f"[cam {cam_index}] ALERT "
+                    f"{obj['class_name']} -> HIGH"
+                )
 
         cv2.imshow(window_name, frame)
 
@@ -78,13 +96,20 @@ def run_camera(source, cam_index):
 def main():
 
     sources = config.CAMERA_SOURCES
+
     if not sources:
         print("CAMERA_SOURCES is empty - add feeds in config.py")
         return
 
     threads = []
+
     for i, source in enumerate(sources):
-        t = threading.Thread(target=run_camera, args=(source, i), daemon=True)
+
+        t = threading.Thread(
+            target=run_camera,
+            args=(source, i),
+            daemon=True,
+        )
         t.start()
         threads.append(t)
 

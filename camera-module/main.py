@@ -79,6 +79,46 @@ def draw_object(frame, det):
         2
     )
 
+
+def open_camera(source):
+    """
+    Tries a few different OpenCV backends before giving up. A plain
+    cv2.VideoCapture(source) can fail to open a perfectly working
+    webcam on some Windows/Linux setups depending on which backend
+    OpenCV picks by default (MSMF vs DSHOW vs V4L2) - this tries the
+    common ones in order and reports exactly what was tried so a
+    real "no camera at all" problem is easy to tell apart from a
+    "wrong backend" problem.
+    """
+
+    backends_to_try = [
+        (None, "default"),
+        (getattr(cv2, "CAP_DSHOW", None), "CAP_DSHOW (Windows)"),
+        (getattr(cv2, "CAP_MSMF", None), "CAP_MSMF (Windows)"),
+        (getattr(cv2, "CAP_V4L2", None), "CAP_V4L2 (Linux)"),
+    ]
+
+    for backend, label in backends_to_try:
+
+        if backend is None and label != "default":
+            continue  # backend constant doesn't exist on this OS/build
+
+        cap = (
+            cv2.VideoCapture(source)
+            if backend is None
+            else cv2.VideoCapture(source, backend)
+        )
+
+        if cap.isOpened():
+            print(f"Camera opened using backend: {label}")
+            return cap
+
+        cap.release()
+        print(f"Backend failed: {label}")
+
+    return None
+
+
 def resize_to_screen(
     frame,
     screen_width,
@@ -154,18 +194,30 @@ def main():
     # Open camera
     # -----------------------------
 
-    cap = cv2.VideoCapture(
+    cap = open_camera(
         config.CAMERA_SOURCE
     )
 
-    if not cap.isOpened():
+    if cap is None:
 
         print(
-            "Could not open camera/video source."
+            "Could not open camera/video source "
+            f"({config.CAMERA_SOURCE!r}) with any backend."
         )
 
         print(
-            "Check CAMERA_SOURCE in config.py"
+            "- Check CAMERA_SOURCE in config.py is the right "
+            "index/path/URL."
+        )
+
+        print(
+            "- Check no other application (Zoom, Teams, another "
+            "Python process, etc.) is already holding the camera."
+        )
+
+        print(
+            "- Check the OS actually granted this program camera "
+            "permission."
         )
 
         return
@@ -268,6 +320,7 @@ def main():
 
             if (
                 obj["threat_level"] == "HIGH"
+                and not obj.get("predicted")
                 and
                 obj["object_id"]
                 not in already_alerted
