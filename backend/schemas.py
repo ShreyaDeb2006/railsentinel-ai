@@ -42,6 +42,7 @@ class AlertOut(BaseModel):
     camera_confidence: Optional[float]
     handheld_reading: Optional[float]
     object_type: Optional[str]
+    reading_type: Optional[str]
     lat: float
     lng: float
     device_ids: str
