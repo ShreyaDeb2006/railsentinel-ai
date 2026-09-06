@@ -1,0 +1,69 @@
+/* ---------------------------------------------------------------------
+   Add Alert screen — form fields plus the centered circular button.
+   --------------------------------------------------------------------- */
+.add-alert-screen {
+  padding: 16px 16px calc(20px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+.form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.form-field label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.form-field input,
+.form-field select,
+.form-field textarea {
+  background: var(--panel-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-size: 15px;
+}
+.form-field textarea { resize: vertical; min-height: 56px; }
+
+.gps-row { display: flex; gap: 10px; }
+.gps-row .form-field { flex: 1; }
+
+.locate-btn {
+  background: var(--panel-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.big-button-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0 12px;
+  min-height: 220px;
+}
+
+/* The centered, red-background circular alert button */
+.big-alert-button {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: var(--alert-red);
+  color: #ffffff;
+  border: none;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 8px 24px rgba(226, 35, 26, 0.45);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: transform 0.08s ease;
+}
+.big-alert-button:active { background: var(--alert-red-dark); transform: scale(0.97); }
+.big-alert-button:disabled { opacity: 0.6; cursor: not-allowed; }
+.big-alert-button .sub { font-size: 11px; font-weight: 600; letter-spacing: 0.02em; opacity: 0.9; }

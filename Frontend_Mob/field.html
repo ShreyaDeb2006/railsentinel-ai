@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#05070b" />
+<title>RailSentinel — Field App</title>
+
+<link rel="stylesheet" href="css/tokens.css" />
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/layout.css" />
+<link rel="stylesheet" href="css/alerts.css" />
+<link rel="stylesheet" href="css/add-alert.css" />
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <span class="app-title">RailSentinel — Field App</span>
+    <div class="header-right">
+      <span id="connLabel">Offline</span>
+      <span id="connDot" class="connection-dot"></span>
+    </div>
+  </header>
+
+  <div class="view-toggle">
+    <button id="toggleAlerts" class="active">Alert Notifications</button>
+    <button id="toggleAdd">Add Alert</button>
+  </div>
+
+  <main>
+    <!-- ============================ ALERTS SCREEN ============================ -->
+    <section id="alertsScreen" class="screen active">
+      <div class="filters">
+        <button class="filter-chip active" data-filter="ALL">All</button>
+        <button class="filter-chip" data-filter="HIGH">High</button>
+        <button class="filter-chip" data-filter="UNCERTAIN">Uncertain</button>
+        <button class="filter-chip" data-filter="LOW">Low</button>
+      </div>
+      <div id="alertList" class="alert-list">
+        <div class="empty-state">Loading alerts…</div>
+      </div>
+      <div class="refresh-hint">Pull to refresh not needed — updates arrive live.</div>
+    </section>
+
+    <!-- ============================ ADD ALERT SCREEN ============================ -->
+    <section id="addScreen" class="screen">
+      <div class="add-alert-screen">
+
+        <div class="form-field">
+          <label for="officerId">Device ID</label>
+          <input id="officerId" type="text" placeholder="e.g. RPF-2214" />
+        </div>
+
+        <div class="form-field">
+          <label for="threatLevel">Threat level</label>
+          <select id="threatLevel">
+            <option value=0.3>Low</option>
+            <option value=0.7 selected>Uncertain</option>
+            <option value=1.0>High</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for=description>What did you observe?</label>
+          <input id=description type="text" placeholder="e.g. Unattended bag near Platform 3" />
+        </div>
+
+        <div class="gps-row">
+          <div class="form-field">
+            <label for="lat">Latitude</label>
+            <input id="lat" type="text" inputmode="decimal" placeholder="e.g. 27.4728" />
+          </div>
+          <div class="form-field">
+            <label for="lng">Longitude</label>
+            <input id="lng" type="text" inputmode="decimal" placeholder="e.g. 94.9120" />
+          </div>
+        </div>
+        <button id="locateBtn" class="locate-btn" type="button">Use current location</button>
+
+        <div class="form-field">
+          <label for="notes">Notes (optional)</label>
+          <textarea id="notes" placeholder="Any extra detail worth passing along"></textarea>
+        </div>
+
+        <div id="addMsg"></div>
+
+        <div class="big-button-wrap">
+          <button id="alertBtn" class="big-alert-button" type="button">
+            <span>ALERT!</span>
+            <span class="sub">tap to report</span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

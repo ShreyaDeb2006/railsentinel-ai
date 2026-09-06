@@ -1,0 +1,130 @@
+/* ---------------------------------------------------------------------
+   RailSentinel AI — design tokens
+   Control-room aesthetic: dark base, monospace for telemetry data,
+   threat-level color doing the actual signaling (not decoration).
+   --------------------------------------------------------------------- */
+
+:root {
+  /* base — matches the control-room dark base used across the app */
+  --bg: #05070b;
+  --panel: #081414;
+  --panel-raised: #172236;
+  --border: #234738;
+  --border-soft: #1a2540;
+
+  /* text — near-white on the dark canvas and panels alike, so no
+     per-component overrides are needed the way the old vivid-cyan
+     panel color required. */
+  --text: #e4e9f2;
+  --text-muted: #8695ae;
+  --text-faint: #56637d;
+
+  /* brand accent — used sparingly, for interactive/selected states only */
+  --accent: #60cb9f;
+  --accent-dim: #234a85;
+
+  /* threat levels — these carry meaning, never decorative */
+  --low: #2fbf6f;
+  --low-bg: rgba(47, 191, 111, 0.12);
+  --uncertain: #f5a623;
+  --uncertain-bg: rgba(245, 166, 35, 0.14);
+  --high: #f0453f;
+  --high-bg: rgba(240, 69, 63, 0.15);
+
+  /* type */
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.threat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.threat-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.threat-pill.low {
+  color: var(--low);
+  background: var(--low-bg);
+}
+.threat-pill.low::before {
+  background: var(--low);
+}
+
+.threat-pill.uncertain {
+  color: var(--uncertain);
+  background: var(--uncertain-bg);
+}
+.threat-pill.uncertain::before {
+  background: var(--uncertain);
+}
+
+.threat-pill.high {
+  color: var(--high);
+  background: var(--high-bg);
+}
+.threat-pill.high::before {
+  background: var(--high);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

@@ -1,0 +1,35 @@
+/* ---------------------------------------------------------------------
+   Design tokens — mirrors Frontend_Mob/src/styles/theme.css so this
+   standalone page matches the rest of the app. Change a value here and
+   it updates everywhere it's used.
+   --------------------------------------------------------------------- */
+:root {
+  --bg: #05070b;
+  --panel: #081414;
+  --panel-raised: #172236;
+  --border: #234738;
+  --border-soft: #1a2540;
+
+  --text: #e4e9f2;
+  --text-muted: #8695ae;
+  --text-faint: #56637d;
+
+  --accent: #60cb9f;
+  --accent-dim: #234a85;
+
+  --low: #2fbf6f;
+  --low-bg: rgba(47, 191, 111, 0.12);
+  --uncertain: #f5a623;
+  --uncertain-bg: rgba(245, 166, 35, 0.14);
+  --high: #f0453f;
+  --high-bg: rgba(240, 69, 63, 0.15);
+
+  --alert-red: #e2231a;
+  --alert-red-dark: #b91c14;
+
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+}

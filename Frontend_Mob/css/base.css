@@ -1,0 +1,55 @@
+/* ---------------------------------------------------------------------
+   Base resets + primitives shared by every screen.
+   --------------------------------------------------------------------- */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea { font-family: inherit; }
+.mono { font-family: var(--font-mono); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Threat-level pill, reused on every alert card */
+.threat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.threat-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+
+.threat-pill.low { color: var(--low); background: var(--low-bg); }
+.threat-pill.low::before { background: var(--low); }
+
+.threat-pill.uncertain { color: var(--uncertain); background: var(--uncertain-bg); }
+.threat-pill.uncertain::before { background: var(--uncertain); }
+
+.threat-pill.high { color: var(--high); background: var(--high-bg); }
+.threat-pill.high::before { background: var(--high); }
+
+/* Error / success banners, reused by the Add Alert form */
+.inline-msg {
+  margin: 4px 0 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+.inline-msg.error { background: var(--high-bg); color: var(--high); }
+.inline-msg.success { background: var(--low-bg); color: var(--low); }

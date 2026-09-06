@@ -1,0 +1,71 @@
+/* ---------------------------------------------------------------------
+   App shell — header, the Alerts/Add Alert toggle, and the screen
+   switcher that shows exactly one screen at a time.
+   --------------------------------------------------------------------- */
+#app {
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.app-title { font-weight: 600; font-size: 15px; letter-spacing: 0.01em; }
+
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex-shrink: 0;
+}
+.connection-dot.live { background: var(--low); box-shadow: 0 0 0 3px var(--low-bg); }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.view-toggle {
+  display: flex;
+  margin: 14px 16px 4px;
+  background: var(--accent-dim);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  flex-shrink: 0;
+}
+.view-toggle button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 10px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.view-toggle button.active {
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+.screen { flex: 1; display: none; flex-direction: column; min-height: 0; }
+.screen.active { display: flex; }
