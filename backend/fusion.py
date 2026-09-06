@@ -56,6 +56,7 @@ def _make_alert(db, camera=None, handheld=None):
         camera_confidence=camera_conf,
         handheld_reading=handheld_val,
         object_type=camera.object_type if camera else None,
+        reading_type=handheld.reading_type if handheld else None,
         lat=lat,
         lng=lng,
         device_ids=",".join(device_ids),
