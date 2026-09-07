@@ -1,0 +1,546 @@
+/* ==========================================================================
+   Dashboard page
+   ========================================================================== */
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dashboard-error {
+  background: var(--high-bg);
+  color: var(--high);
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+}
+
+.dashboard-loading {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* --- Summary tiles --- */
+
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+/*
+ * Same three-layer frame as .panel, but the color is driven by a single
+ * --tile-color variable so each tone (neutral/high/uncertain/low) can set
+ * its own color once and have both the border and the corner brackets
+ * follow it automatically.
+ */
+.summary-tile {
+  --tile-color: var(--corner-color);
+  position: relative;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: calc(var(--panel-inset) + 10px) calc(var(--panel-inset) + 12px);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summary-tile::before {
+  content: "";
+  position: absolute;
+  inset: var(--panel-inset);
+  background: color-mix(in srgb, var(--tile-color) 12%, var(--panel));
+  border: 1px solid var(--tile-color);
+  box-sizing: border-box;
+  z-index: 0;
+  transition: border-color 0.15s ease;
+}
+
+.summary-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background-repeat: no-repeat;
+  background-image:
+    linear-gradient(var(--tile-color), var(--tile-color)),
+    linear-gradient(var(--tile-color), var(--tile-color)),
+    linear-gradient(var(--tile-color), var(--tile-color)),
+    linear-gradient(var(--tile-color), var(--tile-color)),
+    linear-gradient(var(--tile-color), var(--tile-color)),
+    linear-gradient(var(--tile-color), var(--tile-color)),
+    linear-gradient(var(--tile-color), var(--tile-color)),
+    linear-gradient(var(--tile-color), var(--tile-color));
+  background-position:
+    top left, top left,
+    top right, top right,
+    bottom left, bottom left,
+    bottom right, bottom right;
+  background-size:
+    var(--corner-size) var(--corner-thickness), var(--corner-thickness) var(--corner-size),
+    var(--corner-size) var(--corner-thickness), var(--corner-thickness) var(--corner-size),
+    var(--corner-size) var(--corner-thickness), var(--corner-thickness) var(--corner-size),
+    var(--corner-size) var(--corner-thickness), var(--corner-thickness) var(--corner-size);
+}
+
+.summary-tile > * {
+  position: relative;
+  z-index: 1;
+}
+
+.summary-tile:hover::before {
+  box-shadow: 0 0 0 1px var(--tile-color);
+}
+
+.summary-tile-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.summary-tile-count {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.summary-tile.neutral {
+  --tile-color: #ffffff;
+  color: var(--text);
+}
+.summary-tile.neutral .summary-tile-icon {
+  color: var(--text-muted);
+}
+
+.summary-tile.high {
+  --tile-color: var(--high);
+  color: var(--high);
+}
+
+.summary-tile.uncertain {
+  --tile-color: var(--uncertain);
+  color: var(--uncertain);
+}
+
+.summary-tile.low {
+  --tile-color: var(--low);
+  color: var(--low);
+}
+
+/* --- Top grid: map + recent alerts --- */
+
+.dashboard-grid-top {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 14px;
+  min-height: 340px;
+}
+
+/*
+ * .panel is a "frame within a frame":
+ *   1. .panel itself       — a thin outer border (the full rectangle outline)
+ *   2. .panel::before      — a filled inner box, inset from that border by
+ *                            --panel-inset, giving the visible gap
+ *   3. .panel::after       — the bright corner brackets, drawn on top,
+ *                            spanning across the gap so they visually
+ *                            connect the outer line to the inner box
+ * Direct children get position: relative + a z-index so they render
+ * above the inner fill but stay below the corner brackets.
+ */
+.panel {
+  position: relative;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: calc(var(--panel-inset) + 14px);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: var(--panel-inset);
+  background: var(--panel);
+  border: 1px solid var(--corner-color);
+  box-sizing: border-box;
+  z-index: 0;
+}
+
+.panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background-repeat: no-repeat;
+  background-image:
+    linear-gradient(var(--corner-color), var(--corner-color)),
+    linear-gradient(var(--corner-color), var(--corner-color)),
+    linear-gradient(var(--corner-color), var(--corner-color)),
+    linear-gradient(var(--corner-color), var(--corner-color)),
+    linear-gradient(var(--corner-color), var(--corner-color)),
+    linear-gradient(var(--corner-color), var(--corner-color)),
+    linear-gradient(var(--corner-color), var(--corner-color)),
+    linear-gradient(var(--corner-color), var(--corner-color));
+  background-position:
+    top left, top left,
+    top right, top right,
+    bottom left, bottom left,
+    bottom right, bottom right;
+  background-size:
+    var(--corner-size) var(--corner-thickness), var(--corner-thickness) var(--corner-size),
+    var(--corner-size) var(--corner-thickness), var(--corner-thickness) var(--corner-size),
+    var(--corner-size) var(--corner-thickness), var(--corner-thickness) var(--corner-size),
+    var(--corner-size) var(--corner-thickness), var(--corner-thickness) var(--corner-size);
+}
+
+.panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.panel-heading {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.panel-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.panel-heading-row .panel-heading {
+  margin-bottom: 0;
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--corner-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.icon-btn:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.map-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 10, 20, 0.72);
+  z-index: 40;
+}
+
+.map-panel-expanded {
+  position: fixed;
+  inset: 32px;
+  z-index: 41;
+}
+
+.map-panel-expanded .map-panel-body {
+  min-height: 0;
+}
+
+.map-panel-body {
+  flex: 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  min-height: 260px;
+}
+
+.recent-panel {
+  overflow: hidden;
+}
+
+.recent-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+}
+
+.recent-item-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recent-item-type {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.recent-item-meta {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.recent-item-time {
+  font-size: 11px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.view-all-btn {
+  margin-top: 10px;
+  align-self: flex-end;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.view-all-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+/* --- Bottom grid: device status + donut --- */
+
+.dashboard-grid-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.placeholder-panel {
+  min-height: 180px;
+}
+
+.placeholder-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.placeholder-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px dashed var(--text-faint);
+}
+
+.placeholder-body p {
+  font-size: 12px;
+  margin: 0;
+  max-width: 220px;
+}
+
+.donut-panel {
+  align-items: center;
+}
+
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.donut-center-label {
+  fill: var(--text);
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.donut-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.donut-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.donut-count {
+  margin-left: auto;
+  color: var(--text-muted);
+}
+
+.donut-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.donut-dot.high {
+  background: var(--high);
+}
+.donut-dot.uncertain {
+  background: var(--uncertain);
+}
+.donut-dot.low {
+  background: var(--low);
+}
+
+/* ==========================================================================
+   Alerts page
+   ========================================================================== */
+
+.alerts-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.alerts-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.alerts-page-header h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.alert-list-filters {
+  display: flex;
+  gap: 6px;
+}
+
+.filter-chip {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.filter-chip.active {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--accent-dim);
+}
+
+.alert-list-empty {
+  color: var(--text-faint);
+  font-size: 13px;
+  padding: 30px 4px;
+  text-align: center;
+}
+
+.alert-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.alert-date-heading {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.alert-date-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.alert-card {
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.alert-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.alert-card-time {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.alert-card-type {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.alert-card-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.status-tag {
+  align-self: flex-start;
+  font-size: 10px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   Devices page
+   ========================================================================== */
+
+.devices-page {
+  max-width: 480px;
+}
