@@ -54,5 +54,3 @@ which the Alerts page treats as "All" (its default).
   placeholder location (New Delhi). Update `DEFAULT_CENTER` for your demo.
 - **Threat colors** stay consistent everywhere: green = Low, amber =
   Uncertain, red = High — matches `fusion.py`'s classification.
-- The RPF screen asks for an "Officer ID" once and remembers it in
-  `localStorage`, sending it as `verified_by` on every verify action.
