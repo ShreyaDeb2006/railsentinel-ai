@@ -7,7 +7,6 @@ Two screens, one React project:
 - **`/alerts`** — Full alerts list, filterable (All / High / Uncertain / Low),
   grouped by date (Today / Yesterday / older dates).
 - **`/devices`** — Placeholder for now.
-- **`/rpf`** — RPF mobile screen: pending alerts → detail → confirm/dismiss.
 
 All four share one `AlertsProvider` (`src/context/AlertsContext.jsx`), so
 there's a single WebSocket connection for the whole app, not one per page.
