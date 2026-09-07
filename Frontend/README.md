@@ -8,13 +8,13 @@ Two screens, one React project:
   grouped by date (Today / Yesterday / older dates).
 - **`/devices`** — Placeholder for now.
 
-All four share one `AlertsProvider` (`src/context/AlertsContext.jsx`), so
+All three share one `AlertsProvider` (`src/context/AlertsContext.jsx`), so
 there's a single WebSocket connection for the whole app, not one per page.
 
 ## How to run it
 
 ```bash
-npm install     # you'll need to re-run this since lucide-react (icons) was added
+npm install    
 npm run dev
 ```
 
