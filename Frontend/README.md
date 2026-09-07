@@ -1,6 +1,6 @@
-# RailSentinel AI — Dashboard & RPF App (Person 4 + 5)
+# RailSentinel AI — Dashboard
 
-Three screens now, one React project:
+Two screens, one React project:
 
 - **`/`** — Control-room dashboard: clickable summary tiles, live map,
   recent alerts, device status placeholder, and a today's-threats donut.
@@ -19,7 +19,7 @@ npm install     # you'll need to re-run this since lucide-react (icons) was adde
 npm run dev
 ```
 
-Then visit `http://localhost:5173` (dashboard), `/alerts`, `/devices`, or `/rpf`.
+Then visit `http://localhost:5173` (dashboard), `/alerts` or `/devices`
 Your teammate's backend needs to be running at the same time — see the main
 project README for that.
 
