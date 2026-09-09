@@ -4,17 +4,18 @@
 # When True, every stage prints what it's doing: raw YOLO output,
 # what got filtered, tracker state, person/bag association reasoning,
 # threat decisions, and the backend request/response.
-DEBUG = False
+DEBUG = True
 
 
 # ============================================================
 # CAMERA
 # ============================================================
-CAMERA_SOURCE = 0
+CAMERA_SOURCE = "videos/example.mp4"
 # 0 = laptop webcam. Can also be a video file path or RTSP URL.
 
 CAMERA_SOURCES = [
-    0,
+    "videos/example.mp4",
+    "videos/example2.mp4",
     # "rtsp://user:pass@192.168.1.10/stream1",
     # "videos/platform2.mp4",
 ]
@@ -35,10 +36,10 @@ MODEL_PATH = "yolov8n.pt"
 # accurate; yolov8s is a meaningful accuracy upgrade at a modest
 # speed cost if your hardware can keep up.
 
-CONFIDENCE_THRESHOLD = 0.45
+CONFIDENCE_THRESHOLD = 0.30
 # General floor for accepting a raw detection at all.
 
-MODEL_IMG_SIZE = 960
+MODEL_IMG_SIZE = 1120
 # Must be a multiple of 32. Higher = more detail on small/far
 # objects, at a speed cost. 640 is the YOLO default.
 
@@ -146,7 +147,7 @@ BAG_HOLD_IOU_THRESHOLD = 0.15
 # ============================================================
 # THREAT ESCALATION (time WITHOUT attendance)
 # ============================================================
-UNCERTAIN_AFTER_SEC = 3
+UNCERTAIN_AFTER_SEC = 5
 HIGH_ALERT_AFTER_SEC = 10
 
 

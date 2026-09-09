@@ -1,6 +1,7 @@
 import time
 
 import cv2
+import numpy as np
 
 from detector import Detector
 from tracker import ObjectTracker
@@ -74,6 +75,50 @@ def draw_object(frame, det):
         color,
         2
     )
+
+
+def fit_frame_to_window(frame, window_name):
+    """
+    Scales `frame` to fit the CURRENT size of `window_name` while
+    preserving its original aspect ratio, padding any leftover space
+    with black bars (letterbox/pillarbox) rather than stretching it.
+
+    This replaces relying on cv2's own window-resize behavior, which
+    just stretches the image to whatever the window's dragged to and
+    distorts the aspect ratio - cv2.WINDOW_KEEPRATIO exists but only
+    actually works on the Qt backend, so it silently does nothing on
+    the default Windows/GTK builds most people have. Doing the fit
+    ourselves, every frame, works identically regardless of backend.
+    """
+
+    win_rect = cv2.getWindowImageRect(window_name)
+
+    if win_rect is None:
+        return frame
+
+    _, _, win_w, win_h = win_rect
+
+    # Window minimized / not yet realized on screen - nothing sane to
+    # fit into, just show the frame at its native size for this frame.
+    if win_w <= 0 or win_h <= 0:
+        return frame
+
+    frame_h, frame_w = frame.shape[:2]
+
+    scale = min(win_w / frame_w, win_h / frame_h)
+    new_w = max(1, int(frame_w * scale))
+    new_h = max(1, int(frame_h * scale))
+
+    resized = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
+    canvas = np.zeros((win_h, win_w, 3), dtype=frame.dtype)
+
+    x_offset = (win_w - new_w) // 2
+    y_offset = (win_h - new_h) // 2
+
+    canvas[y_offset:y_offset + new_h, x_offset:x_offset + new_w] = resized
+
+    return canvas
 
 
 def open_camera(source):
@@ -200,7 +245,7 @@ def run(cap, detector, tracker, window_name, device_id=None):
                     frame_count = 0
                     fps_timer = time.time()
 
-            cv2.imshow(window_name, frame)
+            cv2.imshow(window_name, fit_frame_to_window(frame, window_name))
 
             key = cv2.waitKey(1) & 0xFF
 
