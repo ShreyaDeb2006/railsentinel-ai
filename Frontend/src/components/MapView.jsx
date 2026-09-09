@@ -7,6 +7,24 @@ const LEVEL_COLOR = {
   high: "#f0453f",
 };
 
+// CARTO now requires a free API key for their basemap tiles (as of Aug
+// 2026) — see /CARTO_API_KEY_SETUP.md for how to get one. Copy .env.example
+// to .env and put your key in VITE_CARTO_API_KEY.
+//
+// Without a key configured, this falls back to plain OpenStreetMap tiles
+// (light theme, no key needed) instead of showing CARTO's "API KEY
+// REQUIRED" watermark — so the app still works for teammates who haven't
+// set up a key yet, it just won't be dark-themed until they do.
+const CARTO_KEY = import.meta.env.VITE_CARTO_API_KEY;
+
+const TILE_URL = CARTO_KEY
+  ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`
+  : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+const TILE_ATTRIBUTION = CARTO_KEY
+  ? '&copy; OpenStreetMap contributors &copy; CARTO'
+  : '&copy; OpenStreetMap contributors';
+
 // Default view — replace with your actual deployment zone's coordinates.
 const DEFAULT_CENTER = [28.6139, 77.209]; // New Delhi, placeholder
 const DEFAULT_ZOOM = 12;
@@ -45,10 +63,7 @@ export default function MapView({ alerts, selectedId, onSelect, expanded }) {
       zoom={DEFAULT_ZOOM}
       style={{ height: "100%", width: "100%", background: "#0b1220" }}
     >
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-      />
+      <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
       <FlyToSelected alert={selected} />
       <InvalidateOnResize watch={expanded} />
       {alerts.map((alert) => {
