@@ -63,6 +63,29 @@
   border-radius: 999px;
 }
 
+.alert-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.verify-btn {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--panel-raised);
+  color: var(--text);
+}
+
+.verify-btn.confirm { color: var(--high); border-color: var(--high); background: var(--high-bg); }
+.verify-btn.dismiss { color: var(--text-muted); }
+
+.verify-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .refresh-hint {
   text-align: center;
   font-size: 11px;

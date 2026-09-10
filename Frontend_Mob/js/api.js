@@ -44,3 +44,21 @@ export async function submitHandheldReading({ readingValue, description, notes, 
   if (!res.ok) throw new Error(`Failed to submit alert: ${res.status}`);
   return res.json();
 }
+
+/**
+ * RPF officer verifying a pending alert as a confirmed threat or a
+ * false alarm. Mirrors Frontend_Mob/src/api.js's verifyAlert exactly,
+ * matching backend/schemas.py's VerifyIn (verified_by, final_status).
+ */
+export async function verifyAlert(alertId, verifiedBy, finalStatus) {
+  const res = await fetch(`${API_BASE}/api/verify/${alertId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      verified_by: verifiedBy,
+      final_status: finalStatus,
+    }),
+  });
+  if (!res.ok) throw new Error(`Failed to verify alert: ${res.status}`);
+  return res.json();
+}
