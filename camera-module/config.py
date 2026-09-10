@@ -4,18 +4,17 @@
 # When True, every stage prints what it's doing: raw YOLO output,
 # what got filtered, tracker state, person/bag association reasoning,
 # threat decisions, and the backend request/response.
-DEBUG = True
+DEBUG = False
 
 
 # ============================================================
 # CAMERA
 # ============================================================
-CAMERA_SOURCE = "videos/example.mp4"
+CAMERA_SOURCE = 0
 # 0 = laptop webcam. Can also be a video file path or RTSP URL.
 
 CAMERA_SOURCES = [
-    "videos/example.mp4",
-    "videos/example2.mp4",
+    0,
     # "rtsp://user:pass@192.168.1.10/stream1",
     # "videos/platform2.mp4",
 ]
